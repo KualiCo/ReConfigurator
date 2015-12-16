@@ -1,0 +1,18 @@
+{
+  "name": "client-reconfigurator",
+  "version": "1.0.0",
+  "description": "[ ] Allow toggling of \"proposal\" on panel [ ] No data loss when re-serializing! [ ] Undo / redo queue",
+  "main": "elm.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "shortid": "2.2.4"
+  }
+}

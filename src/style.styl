@@ -1,0 +1,97 @@
+$blue = HSL(208, 58%, 52%)
+$lightblue = HSL(208, 58%, 82%)
+$green = HSL(118, 41%, 53%)
+$lightgreen = HSL(118, 41%, 83%)
+$yellow = HSL(38, 86%, 59%)
+$lightyellow = HSL(38, 86%, 89%)
+$red = HSL(3, 66%, 57%)
+$lightred = HSL(3, 66%, 87%)
+$gray = hsl(0, 0%, 61%)
+$lightgray = hsl(0, 0%, 91%)
+
+$darkPageBg = HSL(217, 7%, 34%)
+$pageBg = HSL(240, 3%, 93%)
+$panelBg = HSL(210, 7%, 95%)
+$panelBorder = HSL(0, 2%, 88%)
+$gadgetBg = HSL(240, 4%, 95%)
+
+body {
+  background: $pageBg;
+  margin: 0;
+  padding: 0;
+}
+
+nav {
+  background: white;
+  padding: 1.5rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, .2em)
+  position: relative;
+  z-index 100
+}
+
+nav h1 {
+  padding: 0;
+  margin: 0;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: Lato;
+}
+
+.wrapper {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.heavy {
+  font-weight: 700;
+}
+
+.light {
+  font-weight: 300;
+}
+
+.gadget {
+  padding: 1em;
+  background: white;
+}
+
+.gadget .label {
+  font-weight: 700;
+  font-size: 1.2em;
+  color: hsl(0, 0%, 30%)
+}
+
+.gadget .type {
+  color: #7047A3;
+  opacity .7
+}
+
+.panel {
+  background: white;
+  position: relative;
+}
+
+.panel .panelLabel {
+  background: $panelBg;
+  border-bottom: 3px solid $panelBorder;
+  padding 1em
+  color HSL(220, 1%, 43%)
+  font-weight 700
+  font-size 1.2em
+}
+
+.row + .row {
+  padding-top .2em;
+  margin-top .2em
+  border-top 1px solid rgba(0, 0, 0, .1)
+}
+
+.row {
+  display: flex;
+}
+
+.column {
+  flex: 1;
+}
