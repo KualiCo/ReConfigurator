@@ -1,8 +1,9 @@
 module NestedTemplate (..) where
 
 import Json.Decode as D exposing ((:=), Decoder, map, andThen, succeed)
+import Json.Decode.Extra exposing ((|:))
 import Json.Encode as Encode
-import Native.ShortId
+import ShortId
 
 
 --
@@ -15,8 +16,8 @@ import Native.ShortId
 --But I want to store and work with the data in a flat (denormalized) way,
 --where all gadgets are identified by a uuid, and the children list contains
 --ids instead of objects. Something like this:
---{ elements: Dict Uuid TemplateElement
---, children: List Uuid
+--{ elements: Dict Id TemplateElement
+--, children: List Id
 --}
 --I haven't yet been able to figure out how to do achieve this in the same
 --step as decoding. I'd like to be able to have the decoder return the flattened
@@ -29,30 +30,30 @@ import Native.ShortId
 
 type TemplateElement
     = GadgetEl Gadget
-    | PanelEl TemplateElement
-    | LayoutEl TemplateElement
+    | PanelEl Panel
+    | LayoutEl Layout
 
 
 type alias Layout =
-    { id : String
-    , type' : String
+    { type' : String
     , children : List TemplateElement
+    , id : String
     }
 
 
 type alias Gadget =
-    { id : String
-    , label : String
+    { label : String
     , type' : String
     , json : String
+    , id : String
     }
 
 
 type alias Panel =
-    { id : String
-    , label : String
+    { label : String
     , proposal : Bool
     , children : List TemplateElement
+    , id : String
     }
 
 
@@ -73,33 +74,35 @@ withDefault decoder default =
     D.oneOf [ decoder, D.succeed default ]
 
 
+addId : (String -> a) -> a
+addId constructor =
+    constructor (ShortId.generate ())
+
+
 gadgetDecoder : Decoder Gadget
 gadgetDecoder =
-    D.object4
-        (\label type' json id -> { label = label, type' = type', json = json, id = id })
-        (withDefault ("label" := D.string) "No label set")
-        ("type" := D.string)
-        objectAsString
-        (succeed (Native.ShortId.generate ()))
+    D.map addId
+        <| succeed Gadget
+        |: (withDefault ("label" := D.string) "No label set")
+        |: ("type" := D.string)
+        |: objectAsString
 
 
-panelDecoder : Decoder (Panel TemplateElement)
+panelDecoder : Decoder Panel
 panelDecoder =
-    D.object4
-        (\label proposal children id -> { label = label, proposal = proposal, children = children, id = id })
-        (withDefault ("label" := D.string) "No label set")
-        (withDefault ("proposal" := D.bool) False)
-        ("children" := D.list tElementDecoder)
-        (succeed (Native.ShortId.generate ()))
+    D.map addId
+        <| succeed Panel
+        |: (withDefault ("label" := D.string) "No label set")
+        |: (withDefault ("proposal" := D.bool) False)
+        |: ("children" := D.list tElementDecoder)
 
 
-layoutElementDecoder : Decoder (Layout TemplateElement)
+layoutElementDecoder : Decoder Layout
 layoutElementDecoder =
-    D.object3
-        (\type' children id -> { type' = type', children = children, id = id })
-        ("type" := D.string)
-        ("children" := D.list tElementDecoder)
-        (succeed (Native.ShortId.generate ()))
+    D.map addId
+        <| succeed Layout
+        |: ("type" := D.string)
+        |: ("children" := D.list tElementDecoder)
 
 
 tElementDecoder : Decoder TemplateElement
@@ -107,11 +110,11 @@ tElementDecoder =
     ("type" := D.string)
         `andThen` (\type' ->
                     if type' == "Panel" then
-                        (map PanelEl panelDecoder)
+                        (D.map PanelEl panelDecoder)
                     else if (type' == "Column" || type' == "Row") then
-                        (map LayoutEl layoutElementDecoder)
+                        (D.map LayoutEl layoutElementDecoder)
                     else
-                        (map GadgetEl gadgetDecoder)
+                        (D.map GadgetEl gadgetDecoder)
                   )
 
 
@@ -122,6 +125,13 @@ templateDecoder =
         ("_meta" := D.value)
         ("id" := D.string)
         ("template" := (D.list tElementDecoder))
+
+
+emptyTemplate =
+    { meta = Encode.null
+    , template = []
+    , id = ""
+    }
 
 
 parse : String -> Result String Template

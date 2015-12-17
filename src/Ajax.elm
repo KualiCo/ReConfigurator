@@ -1,7 +1,8 @@
 module Ajax (..) where
 
 import Http exposing (get)
-import Template exposing (templateDecoder, Template)
+import NestedTemplate exposing (templateDecoder)
+import Template exposing (Template, flattenTemplate)
 import Task
 import Actions exposing (..)
 import Effects exposing (Effects)
@@ -25,5 +26,6 @@ fetchTemplate okAction errAction apiInfo =
                     Err e ->
                         errAction (toString e)
             )
+        <| Task.map (Result.map flattenTemplate)
         <| Task.toResult
             (get templateDecoder (apiInfo.url ++ "/api/cm/config/course-template"))

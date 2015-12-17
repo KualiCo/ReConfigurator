@@ -1,9 +1,8 @@
 module Main (..) where
 
-import Fixture
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Template exposing (..)
+import Template exposing (Template, emptyTemplate)
 import Renderer exposing (render, renderError)
 import StartApp
 import Effects exposing (Effects)

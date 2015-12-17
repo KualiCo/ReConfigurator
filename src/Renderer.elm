@@ -2,12 +2,27 @@ module Renderer (..) where
 
 import Html.Attributes exposing (..)
 import Html exposing (..)
-import Template exposing (..)
+import Template exposing (TemplateElement(GadgetEl, PanelEl, LayoutEl), Template, Id, Elements)
 import List exposing (map)
+import Dict exposing (Dict)
 
 
-renderTElement el =
-    case el of
+renderId : Elements -> Id -> Html
+renderId elements id =
+    let
+        maybeElem = Dict.get id elements
+    in
+        case maybeElem of
+            Just elem ->
+                renderElement elements elem
+
+            Nothing ->
+                div [] [ text ("Element with id " ++ id ++ " not found.") ]
+
+
+renderElement : Elements -> TemplateElement -> Html
+renderElement elements elem =
+    case elem of
         GadgetEl e ->
             div
                 [ class "gadget" ]
@@ -27,18 +42,18 @@ renderTElement el =
             div
                 [ class "panel" ]
                 [ div [ class "panelLabel" ] [ text e.label ]
-                , div [ class "children" ] (map renderTElement e.children)
+                , div [ class "children" ] (map (renderId elements) e.children)
                 ]
 
         LayoutEl e ->
             if e.type' == "Row" then
                 div
                     [ class "row" ]
-                    (map renderTElement e.children)
+                    (map (renderId elements) e.children)
             else
                 div
                     [ class "column" ]
-                    (map renderTElement e.children)
+                    (map (renderId elements) e.children)
 
 
 render : Template -> Html
@@ -47,7 +62,7 @@ render tpl =
         []
         [ div
             []
-            (map renderTElement tpl.template)
+            (map (renderId tpl.elements) tpl.children)
         ]
 
 
