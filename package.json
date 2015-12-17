@@ -15,6 +15,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "elm-native-module": "2.0.0",
     "shortid": "2.2.4"
+  },
+  "devDependencies": {
+    "css-loader": "0.23.0",
+    "elm-webpack-loader": "1.1.1",
+    "file-loader": "0.8.5",
+    "style-loader": "0.13.0",
+    "stylus-loader": "1.4.2"
   }
 }
