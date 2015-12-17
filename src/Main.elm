@@ -27,7 +27,7 @@ view address model =
         , div
             [ class "wrapper" ]
             [ if model.error == "" then
-                render model.template
+                render address model.template
               else
                 renderError model.error
             ]
@@ -39,6 +39,7 @@ type alias Model =
     , apiInfo : ApiInfo
     , editingApiInfo : ApiInfo
     , error : String
+    , hovering : HoverInfo
     }
 
 
@@ -52,6 +53,7 @@ init =
             , url = ""
             }
       , error = ""
+      , hovering = { id = "", side = NoHover }
       }
     , fetchTemplate UpdateTemplate ShowError storedApiInfo
     )
@@ -72,6 +74,11 @@ update action model =
 
         ShowError e ->
             ( { model | error = e }
+            , Effects.none
+            )
+
+        Hover info ->
+            ( { model | hovering = info }
             , Effects.none
             )
 

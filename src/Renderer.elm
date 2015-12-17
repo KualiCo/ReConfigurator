@@ -1,27 +1,45 @@
 module Renderer (..) where
 
+import Html.Events exposing (onWithOptions)
 import Html.Attributes exposing (..)
 import Html exposing (..)
 import Template exposing (TemplateElement(GadgetEl, PanelEl, LayoutEl), Template, Id, Elements)
 import List exposing (map)
 import Dict exposing (Dict)
+import Signal exposing (Address, message)
+import Actions exposing (Action, Action(Hover), HoverSide(Bottom))
+import Json.Decode
 
 
-renderId : Elements -> Id -> Html
-renderId elements id =
+renderId : Address Action -> Elements -> Id -> Html
+renderId address elements id =
     let
         maybeElem = Dict.get id elements
     in
         case maybeElem of
             Just elem ->
-                renderElement elements elem
+                renderElement address elements elem
 
             Nothing ->
                 div [] [ text ("Element with id " ++ id ++ " not found.") ]
 
 
-renderElement : Elements -> TemplateElement -> Html
-renderElement elements elem =
+addHoverAttrs : Address Action -> Id -> List Attribute -> List Attribute
+addHoverAttrs address id currentAttrs =
+    List.append
+        currentAttrs
+        [ attribute "dropzone" "move"
+        , attribute "ondragenter" "return false"
+        , onWithOptions
+            "dragover"
+            { preventDefault = True, stopPropagation = False }
+            Json.Decode.value
+            (\_ -> message address (Hover { id = id, side = Bottom }))
+        ]
+
+
+renderElement : Address Action -> Elements -> TemplateElement -> Html
+renderElement address elements elem =
     case elem of
         GadgetEl e ->
             div
@@ -40,29 +58,33 @@ renderElement elements elem =
 
         PanelEl e ->
             div
-                [ class "panel" ]
+                (addHoverAttrs
+                    address
+                    e.id
+                    [ class "panel", draggable "true" ]
+                )
                 [ div [ class "panelLabel" ] [ text e.label ]
-                , div [ class "children" ] (map (renderId elements) e.children)
+                , div [ class "children" ] (map (renderId address elements) e.children)
                 ]
 
         LayoutEl e ->
             if e.type' == "Row" then
                 div
                     [ class "row" ]
-                    (map (renderId elements) e.children)
+                    (map (renderId address elements) e.children)
             else
                 div
                     [ class "column" ]
-                    (map (renderId elements) e.children)
+                    (map (renderId address elements) e.children)
 
 
-render : Template -> Html
-render tpl =
+render : Address Action -> Template -> Html
+render address tpl =
     div
         []
         [ div
             []
-            (map (renderId tpl.elements) tpl.children)
+            (map (renderId address tpl.elements) tpl.children)
         ]
 
 
