@@ -4,6 +4,11 @@ require('./index.html')
 require('./style.styl')
 var Elm = require('./Main')
 var shortid = require('shortid')
+var ElmNativeModule = require('elm-native-module')
+
+ElmNativeModule(Elm, 'ShortId', {
+  generate: shortid.generate
+})
 
 Elm.embed(Elm.Main, document.getElementById('main'),
 	{ storedApiInfo:
@@ -13,18 +18,3 @@ Elm.embed(Elm.Main, document.getElementById('main'),
 	}
 )
 
-
-function ElmNativeModule(name, values) {
-    Elm.Native[name] = {};
-    Elm.Native[name].make = function(elm) {
-        elm.Native = elm.Native || {};
-        elm.Native[name] = elm.Native[name] || {};
-        if (elm.Native[name].values) return elm.Native[name].values;
-        return elm.Native[name].values = values;
-    };
-}
-
-
-ElmNativeModule('ShortId', {
-	generate: shortid.generate
-})
