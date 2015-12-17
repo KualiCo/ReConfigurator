@@ -1,6 +1,6 @@
 module NestedTemplate (..) where
 
-import Json.Decode as D exposing ((:=), Decoder, map, andThen, succeed)
+import Json.Decode as D exposing ((:=), Decoder, map, andThen, succeed, oneOf)
 import Json.Decode.Extra exposing ((|:))
 import Json.Encode as Encode
 import ShortId
@@ -19,7 +19,7 @@ import ShortId
 --{ elements: Dict Id TemplateElement
 --, children: List Id
 --}
---I haven't yet been able to figure out how to do achieve this in the same
+--I haven't yet been able to figure out how to achieve this in the same
 --step as decoding. I'd like to be able to have the decoder return the flattened
 --format directly, but as I experimented I found the code to be much less
 --easily understandable. For now I've opted to have this intermediate type,
@@ -28,40 +28,32 @@ import ShortId
 --
 
 
-type TemplateElement
-    = GadgetEl Gadget
-    | PanelEl Panel
-    | LayoutEl Layout
+type ChildElements
+    = ChildElements (List TemplateElement)
 
 
-type alias Layout =
-    { type' : String
-    , children : List TemplateElement
-    , id : String
-    }
-
-
-type alias Gadget =
-    { label : String
+type alias TemplateElement =
+    { id : String
     , type' : String
+    , children : ChildElements
+    , label : String
     , json : String
-    , id : String
-    }
-
-
-type alias Panel =
-    { label : String
-    , proposal : Bool
-    , children : List TemplateElement
-    , id : String
     }
 
 
 type alias Template =
     { meta : D.Value
     , id : String
-    , template : List TemplateElement
+    , children : ChildElements
     }
+
+
+children : { a | children : ChildElements } -> List TemplateElement
+children recordWithChildren =
+    let
+        (ChildElements elems) = recordWithChildren.children
+    in
+        elems
 
 
 objectAsString : Decoder String
@@ -74,57 +66,33 @@ withDefault decoder default =
     D.oneOf [ decoder, D.succeed default ]
 
 
-addId : (String -> a) -> a
-addId constructor =
-    constructor (ShortId.generate ())
-
-
-gadgetDecoder : Decoder Gadget
-gadgetDecoder =
-    D.map addId
-        <| succeed Gadget
-        |: (withDefault ("label" := D.string) "No label set")
-        |: ("type" := D.string)
-        |: objectAsString
-
-
-panelDecoder : Decoder Panel
-panelDecoder =
-    D.map addId
-        <| succeed Panel
-        |: (withDefault ("label" := D.string) "No label set")
-        |: (withDefault ("proposal" := D.bool) False)
-        |: ("children" := D.list tElementDecoder)
-
-
-layoutElementDecoder : Decoder Layout
-layoutElementDecoder =
-    D.map addId
-        <| succeed Layout
-        |: ("type" := D.string)
-        |: ("children" := D.list tElementDecoder)
-
-
 tElementDecoder : Decoder TemplateElement
 tElementDecoder =
     ("type" := D.string)
         `andThen` (\type' ->
-                    if type' == "Panel" then
-                        (D.map PanelEl panelDecoder)
-                    else if (type' == "Column" || type' == "Row") then
-                        (D.map LayoutEl layoutElementDecoder)
+                    if type' == "Panel" || type' == "Row" || type' == "Column" then
+                        succeed TemplateElement
+                            |: (D.map (\_ -> (ShortId.generate ())) (succeed ""))
+                            |: ("type" := D.string)
+                            |: (D.map ChildElements ("children" := D.list tElementDecoder))
+                            |: (withDefault ("label" := D.string) "No label set")
+                            |: objectAsString
                     else
-                        (D.map GadgetEl gadgetDecoder)
+                        succeed TemplateElement
+                            |: (D.map (\_ -> (ShortId.generate ())) (succeed ""))
+                            |: ("type" := D.string)
+                            |: (D.map ChildElements (succeed []))
+                            |: (withDefault ("label" := D.string) "No label set")
+                            |: objectAsString
                   )
 
 
 templateDecoder : Decoder Template
 templateDecoder =
-    D.object3
-        Template
-        ("_meta" := D.value)
-        ("id" := D.string)
-        ("template" := (D.list tElementDecoder))
+    succeed Template
+        |: ("_meta" := D.value)
+        |: ("id" := D.string)
+        |: (D.map ChildElements ("template" := (D.list tElementDecoder)))
 
 
 emptyTemplate =

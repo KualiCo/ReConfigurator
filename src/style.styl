@@ -39,6 +39,64 @@ nav h1 {
   font-family: Lato;
 }
 
+.dzWrapper {
+  position: relative
+  transition: 100ms;
+}
+
+.hovering-top {
+  border-top 4px solid hsl(0, 0%, 30%);
+  margin-top: 1em;
+  padding-top: 1em;
+}
+
+.hovering-bottom {
+  border-bottom 4px solid hsl(0, 0%, 30%)
+  margin-bottom: 1em;
+  padding-bottom: 1em;
+}
+
+.dzT {
+  background: $lightblue
+  opacity .4
+  border: 6px dotted $blue
+  box-sizing: border-box
+  position: absolute
+  left 0
+  top 0
+  width 100%
+  height 4em
+  z-index 100
+  transition: 100ms;
+}
+
+.hovering-top .dzT {
+  height 5em;
+  background: $lightyellow
+  opacity .4
+  border: 6px dotted $yellow
+}
+
+.dzB {
+  background: $lightgreen
+  opacity .4
+  border: 6px dotted $green
+  position: absolute
+  left 0
+  bottom 0
+  width 100%
+  height 4em
+  z-index 100
+  transition: 100ms;
+}
+
+.hovering-bottom .dzB {
+  height 5em;
+  background: $lightyellow
+  opacity .4
+  border: 6px dotted $yellow
+}
+
 .wrapper {
   max-width: 900px;
   margin: 0 auto;

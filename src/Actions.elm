@@ -22,3 +22,5 @@ type Action
     | UpdateTemplate Template
     | ShowError String
     | Hover HoverInfo
+    | SetDragging Id
+    --| Move Id HoverSide Id

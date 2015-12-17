@@ -27,7 +27,7 @@ view address model =
         , div
             [ class "wrapper" ]
             [ if model.error == "" then
-                render address model.template
+                render address model.template model.hovering model.dragging
               else
                 renderError model.error
             ]
@@ -40,6 +40,7 @@ type alias Model =
     , editingApiInfo : ApiInfo
     , error : String
     , hovering : HoverInfo
+    , dragging : String
     }
 
 
@@ -54,9 +55,16 @@ init =
             }
       , error = ""
       , hovering = { id = "", side = NoHover }
+      , dragging = ""
       }
     , fetchTemplate UpdateTemplate ShowError storedApiInfo
     )
+
+
+
+--withoutId : List Id -> Id -> List Id
+--withoutId list id =
+--    List.filter ((==) id) list
 
 
 update : Action -> Model -> ( Model, Effects Action )
@@ -81,6 +89,21 @@ update action model =
             ( { model | hovering = info }
             , Effects.none
             )
+
+        SetDragging val ->
+            ( { model | dragging = val }
+            , Effects.none
+            )
+
+
+
+--Move movingId side targetId ->
+--    let
+--        withoutMoving =
+--            Dict.map () model.template.elements
+--    ( { model | }
+--    , Effects.none
+--    )
 
 
 app =
