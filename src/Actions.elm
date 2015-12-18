@@ -8,7 +8,6 @@ type HoverSide
     | Right
     | Top
     | Bottom
-    | NoHover
 
 
 type alias HoverInfo =
@@ -23,4 +22,4 @@ type Action
     | ShowError String
     | Hover HoverInfo
     | SetDragging Id
-    --| Move Id HoverSide Id
+    | Move Id HoverSide Id

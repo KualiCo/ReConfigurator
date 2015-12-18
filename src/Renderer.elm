@@ -7,7 +7,7 @@ import Template exposing (TemplateElement, Template, Id, Elements)
 import List exposing (map)
 import Dict exposing (Dict)
 import Signal exposing (Address, message)
-import Actions exposing (Action, Action(Hover, SetDragging), HoverSide(Top, Bottom, Left, Right, NoHover), HoverInfo)
+import Actions exposing (Action, Action(Hover, SetDragging, Move), HoverSide(Top, Bottom, Left, Right), HoverInfo)
 import Json.Decode as Json
 
 
@@ -24,9 +24,6 @@ hoverClassForSide side =
 
         Right ->
             "hovering-right"
-
-        NoHover ->
-            ""
 
 
 render : Address Action -> Template -> HoverInfo -> Id -> Html
@@ -58,11 +55,11 @@ render address tpl hovering dragging =
                 , on
                     "dragleave"
                     Json.value
-                    (\_ -> message address (Hover { id = "", side = NoHover }))
-                  --, on
-                  --    "drop"
-                  --    Json.value
-                  --    (\_ -> message address (Move dragging side id))
+                    (\_ -> message address (Hover { id = "", side = Top }))
+                , on
+                    "drop"
+                    Json.value
+                    (\_ -> message address (Move dragging side id))
                 ]
 
         addVertDropzones id child =

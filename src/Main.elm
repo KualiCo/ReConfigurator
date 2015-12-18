@@ -2,7 +2,7 @@ module Main (..) where
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Template exposing (Template, emptyTemplate)
+import Template exposing (Template, emptyTemplate, Id, TemplateElement)
 import Renderer exposing (render, renderError)
 import StartApp
 import Effects exposing (Effects)
@@ -10,6 +10,7 @@ import Signal exposing (Address)
 import Task exposing (Task)
 import Actions exposing (..)
 import Ajax exposing (fetchTemplate, ApiInfo)
+import Dict exposing (map)
 
 
 view : Address Action -> Model -> Html
@@ -54,17 +55,40 @@ init =
             , url = ""
             }
       , error = ""
-      , hovering = { id = "", side = NoHover }
+      , hovering = { id = "", side = Top }
       , dragging = ""
       }
     , fetchTemplate UpdateTemplate ShowError storedApiInfo
     )
 
 
+withoutId : Id -> List Id -> List Id
+withoutId removalId children =
+    List.filter (\id -> id /= removalId) children
 
---withoutId : List Id -> Id -> List Id
---withoutId list id =
---    List.filter ((==) id) list
+
+reInsertId : Id -> HoverSide -> Id -> List Id -> List Id
+reInsertId movingId side targetId children =
+    List.foldl
+        (\id memo ->
+            if id == targetId then
+                case side of
+                    Top ->
+                        List.append memo [ movingId, id ]
+
+                    Bottom ->
+                        List.append memo [ id, movingId ]
+
+                    Left ->
+                        List.append memo [ movingId, id ]
+
+                    Right ->
+                        List.append memo [ id, movingId ]
+            else
+                List.append memo [ id ]
+        )
+        []
+        children
 
 
 update : Action -> Model -> ( Model, Effects Action )
@@ -95,15 +119,31 @@ update action model =
             , Effects.none
             )
 
+        Move movingId side targetId ->
+            let
+                removedFromElements =
+                    map
+                        (\_ elem -> { elem | children = (withoutId movingId elem.children) })
+                        model.template.elements
 
+                reinsertedInElements =
+                    map
+                        (\_ elem -> { elem | children = (reInsertId movingId side targetId elem.children) })
+                        removedFromElements
 
---Move movingId side targetId ->
---    let
---        withoutMoving =
---            Dict.map () model.template.elements
---    ( { model | }
---    , Effects.none
---    )
+                removedFromRootChildren =
+                    withoutId movingId model.template.children
+
+                reinsertedInRootChildren =
+                    reInsertId movingId side targetId removedFromRootChildren
+
+                template = model.template
+
+                updatedTemplate = { template | elements = reinsertedInElements, children = reinsertedInRootChildren }
+            in
+                ( { model | template = updatedTemplate }
+                , Effects.none
+                )
 
 
 app =

@@ -3,12 +3,7 @@
 require('./index.html')
 require('./style.styl')
 var Elm = require('./Main')
-var shortid = require('shortid')
-var ElmNativeModule = require('elm-native-module')
-
-ElmNativeModule(Elm, 'ShortId', {
-  generate: shortid.generate
-})
+require('./Native/ShortIdImpl')(Elm)
 
 Elm.embed(Elm.Main, document.getElementById('main'),
 	{ storedApiInfo:

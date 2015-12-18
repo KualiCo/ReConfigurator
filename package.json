@@ -1,13 +1,16 @@
 {
   "name": "client-reconfigurator",
   "version": "1.0.0",
-  "description": "[ ] Allow toggling of \"proposal\" on panel [ ] No data loss when re-serializing! [ ] Undo / redo queue",
+  "description": "",
   "main": "elm.js",
   "directories": {
-    "test": "tests"
+  },
+  "watches": {
+    "test": "**/*.elm"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "elm-test src/TestRunner.elm",
+    "test.watch": "rerun-script",
     "start": "webpack-dev-server --port 4000 --watch",
     "build": "webpack"
   },
@@ -20,8 +23,10 @@
   },
   "devDependencies": {
     "css-loader": "0.23.0",
+    "elm-test": "0.16.0",
     "elm-webpack-loader": "1.1.1",
     "file-loader": "0.8.5",
+    "rerun-script": "0.6.0",
     "style-loader": "0.13.0",
     "stylus-loader": "1.4.2"
   }
