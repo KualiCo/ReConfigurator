@@ -4,58 +4,57 @@ import Html.Events exposing (onWithOptions, on)
 import Html.Attributes exposing (..)
 import Html exposing (..)
 import Template exposing (TemplateElement, Template, Id, Elements)
-import List exposing (map)
+import List exposing (indexedMap)
 import Dict exposing (Dict)
 import Signal exposing (Address, message)
 import Actions exposing (..)
 import Json.Decode as Json
 
 
-hoverClassForSide side =
-    case side of
-        Top ->
-            "hovering-top"
-
-        Bottom ->
-            "hovering-bottom"
-
-        Left ->
-            "hovering-left"
-
-        Right ->
-            "hovering-right"
-
-
-addVertDropzones : Address Action -> Drag -> HoverInfo -> Id -> Html -> Html
-addVertDropzones address dragging hovering id child =
+dropzone : Address Action -> Drag -> HoverInfo -> TemplateElement -> HoverSide -> Html
+dropzone address dragging hovering elem side =
     let
+        addDropzoneAttrs' = addDropzoneAttrs address dragging
+
         hoverClass =
-            if hovering.id == id then
-                hoverClassForSide hovering.side
+            if hovering.id == elem.id && hovering.side == side then
+                " hovering"
             else
                 ""
 
-        addDropzoneAttrs' = addDropzoneAttrs address dragging
+        dzClass =
+            case side of
+                Top ->
+                    "dzH"
+
+                Bottom ->
+                    "dzH"
+
+                Left ->
+                    "dzV"
+
+                Right ->
+                    "dzV"
     in
-        if dragging.id /= "" && dragging.id /= id then
-            div
-                [ class ("dzWrapper " ++ hoverClass) ]
-                [ div
-                    (addDropzoneAttrs'
-                        id
-                        [ class "dzT" ]
-                        Top
-                    )
-                    []
-                , child
-                , div
-                    (addDropzoneAttrs'
-                        id
-                        [ class "dzB" ]
-                        Bottom
-                    )
-                    []
-                ]
+        div
+            [ class ("dzWrapper" ++ hoverClass) ]
+            [ div (addDropzoneAttrs' elem.id [ class dzClass ] side) []
+            ]
+
+
+addDropZones : Address Action -> Drag -> HoverInfo -> Int -> TemplateElement -> Html -> Html
+addDropZones address dragging hovering idx elem child =
+    let
+        dropzone' = dropzone address dragging hovering
+
+        children =
+            if idx == 0 then
+                [ dropzone' elem Top, child, dropzone' elem Bottom ]
+            else
+                [ child, dropzone' elem Bottom ]
+    in
+        if dragging.id /= "" && dragging.id /= elem.id then
+            div [] children
         else
             child
 
@@ -92,36 +91,36 @@ addDraggableAttrs address elem existingAttrs =
         ]
 
 
-renderId : Address Action -> Drag -> HoverInfo -> Elements -> Id -> Html
-renderId address dragging hovering elements id =
+renderId : Address Action -> Drag -> HoverInfo -> Elements -> Int -> Id -> Html
+renderId address dragging hovering elements idx id =
     let
-        renderElement' = renderElement address dragging hovering elements
+        renderElement' = renderElement address dragging hovering elements idx
     in
         Maybe.withDefault
             (div [] [ text ("Element with id " ++ id ++ " not found.") ])
             (Maybe.map renderElement' (Dict.get id elements))
 
 
-renderElement : Address Action -> Drag -> HoverInfo -> Elements -> TemplateElement -> Html
-renderElement address dragging hovering elements elem =
+renderElement : Address Action -> Drag -> HoverInfo -> Elements -> Int -> TemplateElement -> Html
+renderElement address dragging hovering elements idx elem =
     let
         renderId' = renderId address dragging hovering elements
 
         addDraggableAttrs' = addDraggableAttrs address
 
-        addVertDropzones' = addVertDropzones address dragging hovering
+        addDropZones' = addDropZones address dragging hovering idx
     in
         if elem.type' == "Row" then
             div
                 [ class "row" ]
-                (map renderId' elem.children)
+                (indexedMap renderId' elem.children)
         else if elem.type' == "Column" then
             div
                 [ class "column" ]
-                (map renderId' elem.children)
+                (indexedMap renderId' elem.children)
         else if elem.type' == "Panel" then
-            addVertDropzones'
-                elem.id
+            addDropZones'
+                elem
                 <| div
                     (addDraggableAttrs'
                         elem
@@ -130,7 +129,7 @@ renderElement address dragging hovering elements elem =
                         ]
                     )
                     [ div [ class "panelLabel" ] [ text elem.label ]
-                    , div [ class "children" ] (map renderId' elem.children)
+                    , div [ class "children" ] (indexedMap renderId' elem.children)
                     ]
         else
             div
@@ -159,7 +158,7 @@ render address tpl hovering dragging =
             []
             [ div
                 []
-                (map renderId' tpl.children)
+                (indexedMap renderId' tpl.children)
             ]
 
 

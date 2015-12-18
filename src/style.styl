@@ -44,56 +44,29 @@ nav h1 {
   transition: 100ms;
 }
 
-.hovering-top {
-  margin-top: 1em;
+.dzWrapper.hovering {
+  margin 1em;
+  border 3px solid $blue;
 }
 
-.hovering-bottom {
-  margin-bottom: 1em;
-}
-
-.dzT {
-  background: $lightblue
-  opacity .9
-  border: 6px dotted $blue
+.dzH {
   box-sizing: border-box
   position: absolute
   left 0
-  top 0
+  top -2em
   width 100%
   height 4em
   z-index 100
   transition: 100ms;
 }
 
-.hovering-top .dzT {
-  background: $lightyellow
-  border: 6px dotted $yellow
-}
-
-.dzB {
-  background: $lightgreen
-  
-  opacity .9
-  border: 6px dotted $green
-  position: absolute
-  left 0
-  bottom 0
-  width 100%
-  height 4em
-  z-index 100
-  transition: 100ms;
-}
-
-.hovering-bottom .dzB {
-  background: $lightyellow
-  border: 6px dotted $yellow
+.hovering .dzH {
+  top -3em;
 }
 
 .wrapper {
   max-width: 900px;
   margin: 0 auto;
-  background: $darkPageBg
 }
 
 .heavy {
