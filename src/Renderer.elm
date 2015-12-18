@@ -26,10 +26,68 @@ hoverClassForSide side =
             "hovering-right"
 
 
+addVertDropzones : Address Action -> Drag -> HoverInfo -> Id -> Html -> Html
+addVertDropzones address dragging hovering id child =
+    let
+        hoverClass =
+            if hovering.id == id then
+                hoverClassForSide hovering.side
+            else
+                ""
+
+        addDropzoneAttrs' = addDropzoneAttrs address dragging
+    in
+        if dragging.id /= "" && dragging.id /= id then
+            div
+                [ class ("dzWrapper " ++ hoverClass) ]
+                [ div
+                    (addDropzoneAttrs'
+                        id
+                        [ class "dzT" ]
+                        Top
+                    )
+                    []
+                , child
+                , div
+                    (addDropzoneAttrs'
+                        id
+                        [ class "dzB" ]
+                        Bottom
+                    )
+                    []
+                ]
+        else
+            child
+
+
+addDropzoneAttrs : Address Action -> Drag -> Id -> List Attribute -> HoverSide -> List Attribute
+addDropzoneAttrs address dragging id currentAttrs side =
+    List.append
+        currentAttrs
+        [ attribute "dropzone" "move"
+        , attribute "ondragenter" "return false"
+        , onWithOptions
+            "dragover"
+            { preventDefault = True, stopPropagation = False }
+            Json.value
+            (\_ -> message address (Hover { id = id, side = side }))
+        , on
+            "dragleave"
+            Json.value
+            (\_ -> message address (Hover { id = "", side = Top }))
+        , on
+            "drop"
+            Json.value
+            (\_ -> message address (Move dragging.id side id))
+        ]
+
+
 render : Address Action -> Template -> HoverInfo -> Drag -> Html
 render address tpl hovering dragging =
     let
         elements = tpl.elements
+
+        addVertDropzones' = addVertDropzones address dragging hovering
 
         renderId id =
             Maybe.withDefault
@@ -41,56 +99,6 @@ render address tpl hovering dragging =
                 currentClasses ++ " hovering"
             else
                 currentClasses
-
-        addDropzoneAttrs id currentAttrs side =
-            List.append
-                currentAttrs
-                [ attribute "dropzone" "move"
-                , attribute "ondragenter" "return false"
-                , onWithOptions
-                    "dragover"
-                    { preventDefault = True, stopPropagation = False }
-                    Json.value
-                    (\_ -> message address (Hover { id = id, side = side }))
-                , on
-                    "dragleave"
-                    Json.value
-                    (\_ -> message address (Hover { id = "", side = Top }))
-                , on
-                    "drop"
-                    Json.value
-                    (\_ -> message address (Move dragging.id side id))
-                ]
-
-        addVertDropzones id child =
-            let
-                hoverClass =
-                    if hovering.id == id then
-                        hoverClassForSide hovering.side
-                    else
-                        ""
-            in
-                if dragging.id /= "" && dragging.id /= id then
-                    div
-                        [ class ("dzWrapper " ++ hoverClass) ]
-                        [ div
-                            (addDropzoneAttrs
-                                id
-                                [ class "dzT" ]
-                                Top
-                            )
-                            []
-                        , child
-                        , div
-                            (addDropzoneAttrs
-                                id
-                                [ class "dzB" ]
-                                Bottom
-                            )
-                            []
-                        ]
-                else
-                    child
 
         addDraggableAttrs elem existingAttrs =
             List.append
@@ -110,7 +118,7 @@ render address tpl hovering dragging =
                     [ class "column" ]
                     (map renderId elem.children)
             else if elem.type' == "Panel" then
-                addVertDropzones
+                addVertDropzones'
                     elem.id
                     <| div
                         (addDraggableAttrs
