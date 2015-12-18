@@ -7,7 +7,7 @@ import Template exposing (TemplateElement, Template, Id, Elements)
 import List exposing (map)
 import Dict exposing (Dict)
 import Signal exposing (Address, message)
-import Actions exposing (Action, Action(Hover, SetDragging, Move), HoverSide(Top, Bottom, Left, Right), HoverInfo)
+import Actions exposing (..)
 import Json.Decode as Json
 
 
@@ -26,7 +26,7 @@ hoverClassForSide side =
             "hovering-right"
 
 
-render : Address Action -> Template -> HoverInfo -> Id -> Html
+render : Address Action -> Template -> HoverInfo -> Drag -> Html
 render address tpl hovering dragging =
     let
         elements = tpl.elements
@@ -59,7 +59,7 @@ render address tpl hovering dragging =
                 , on
                     "drop"
                     Json.value
-                    (\_ -> message address (Move dragging side id))
+                    (\_ -> message address (Move dragging.id side id))
                 ]
 
         addVertDropzones id child =
@@ -70,7 +70,7 @@ render address tpl hovering dragging =
                     else
                         ""
             in
-                if dragging /= "" && dragging /= id then
+                if dragging.id /= "" && dragging.id /= id then
                     div
                         [ class ("dzWrapper " ++ hoverClass) ]
                         [ div
@@ -92,12 +92,12 @@ render address tpl hovering dragging =
                 else
                     child
 
-        addDraggableAttrs id existingAttrs =
+        addDraggableAttrs elem existingAttrs =
             List.append
                 existingAttrs
                 [ draggable "true"
-                , on "drag" Json.value (\_ -> message address (SetDragging id))
-                , on "dragend" Json.value (\_ -> message address (SetDragging ""))
+                , on "drag" Json.value (\_ -> message address (SetDragging elem))
+                , on "dragend" Json.value (\_ -> message address (SetDragging noDrag))
                 ]
 
         renderElement elem =
@@ -114,7 +114,7 @@ render address tpl hovering dragging =
                     elem.id
                     <| div
                         (addDraggableAttrs
-                            elem.id
+                            elem
                             [ class "panel"
                             , key elem.id
                             ]

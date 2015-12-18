@@ -1,6 +1,6 @@
 module Actions (..) where
 
-import Template exposing (Template, Id)
+import Template exposing (Template, Id, TemplateElement, emptyElement)
 
 
 type HoverSide
@@ -9,6 +9,11 @@ type HoverSide
     | Top
     | Bottom
 
+
+type alias Drag =
+    TemplateElement
+
+noDrag = emptyElement
 
 type alias HoverInfo =
     { id : Id
@@ -21,5 +26,5 @@ type Action
     | UpdateTemplate Template
     | ShowError String
     | Hover HoverInfo
-    | SetDragging Id
+    | SetDragging Drag
     | Move Id HoverSide Id

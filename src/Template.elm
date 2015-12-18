@@ -28,6 +28,16 @@ type alias Template =
     }
 
 
+emptyElement : TemplateElement
+emptyElement =
+    { type' = ""
+    , children = []
+    , label = ""
+    , json = ""
+    , id = ""
+    }
+
+
 emptyTemplate =
     { children = []
     , elements = Dict.empty

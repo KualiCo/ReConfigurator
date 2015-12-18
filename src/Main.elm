@@ -41,7 +41,7 @@ type alias Model =
     , editingApiInfo : ApiInfo
     , error : String
     , hovering : HoverInfo
-    , dragging : String
+    , dragging : Drag
     }
 
 
@@ -56,7 +56,7 @@ init =
             }
       , error = ""
       , hovering = { id = "", side = Top }
-      , dragging = ""
+      , dragging = noDrag
       }
     , fetchTemplate UpdateTemplate ShowError storedApiInfo
     )
