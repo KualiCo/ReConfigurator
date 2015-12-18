@@ -92,68 +92,74 @@ addDraggableAttrs address elem existingAttrs =
         ]
 
 
+renderId : Address Action -> Drag -> HoverInfo -> Elements -> Id -> Html
+renderId address dragging hovering elements id =
+    let
+        renderElement' = renderElement address dragging hovering elements
+    in
+        Maybe.withDefault
+            (div [] [ text ("Element with id " ++ id ++ " not found.") ])
+            (Maybe.map renderElement' (Dict.get id elements))
+
+
+renderElement : Address Action -> Drag -> HoverInfo -> Elements -> TemplateElement -> Html
+renderElement address dragging hovering elements elem =
+    let
+        renderId' = renderId address dragging hovering elements
+
+        addDraggableAttrs' = addDraggableAttrs address
+
+        addVertDropzones' = addVertDropzones address dragging hovering
+    in
+        if elem.type' == "Row" then
+            div
+                [ class "row" ]
+                (map renderId' elem.children)
+        else if elem.type' == "Column" then
+            div
+                [ class "column" ]
+                (map renderId' elem.children)
+        else if elem.type' == "Panel" then
+            addVertDropzones'
+                elem.id
+                <| div
+                    (addDraggableAttrs'
+                        elem
+                        [ class "panel"
+                        , key elem.id
+                        ]
+                    )
+                    [ div [ class "panelLabel" ] [ text elem.label ]
+                    , div [ class "children" ] (map renderId' elem.children)
+                    ]
+        else
+            div
+                [ class "gadget" ]
+                [ div
+                    [ class "label" ]
+                    [ text
+                        (if elem.label == "" then
+                            "No label"
+                         else
+                            elem.label
+                        )
+                    ]
+                , div [ class "type" ] [ text elem.type' ]
+                ]
+
+
 render : Address Action -> Template -> HoverInfo -> Drag -> Html
 render address tpl hovering dragging =
     let
         elements = tpl.elements
 
-        addVertDropzones' = addVertDropzones address dragging hovering
-
-        addDraggableAttrs' = addDraggableAttrs address
-
-        renderId id =
-            Maybe.withDefault
-                (div [] [ text ("Element with id " ++ id ++ " not found.") ])
-                (Maybe.map renderElement (Dict.get id elements))
-
-        hoverableClass id currentClasses =
-            if hovering.id == id then
-                currentClasses ++ " hovering"
-            else
-                currentClasses
-
-        renderElement elem =
-            if elem.type' == "Row" then
-                div
-                    [ class "row" ]
-                    (map renderId elem.children)
-            else if elem.type' == "Column" then
-                div
-                    [ class "column" ]
-                    (map renderId elem.children)
-            else if elem.type' == "Panel" then
-                addVertDropzones'
-                    elem.id
-                    <| div
-                        (addDraggableAttrs'
-                            elem
-                            [ class "panel"
-                            , key elem.id
-                            ]
-                        )
-                        [ div [ class "panelLabel" ] [ text elem.label ]
-                        , div [ class "children" ] (map renderId elem.children)
-                        ]
-            else
-                div
-                    [ class "gadget" ]
-                    [ div
-                        [ class "label" ]
-                        [ text
-                            (if elem.label == "" then
-                                "No label"
-                             else
-                                elem.label
-                            )
-                        ]
-                    , div [ class "type" ] [ text elem.type' ]
-                    ]
+        renderId' = renderId address dragging hovering elements
     in
         div
             []
             [ div
                 []
-                (map renderId tpl.children)
+                (map renderId' tpl.children)
             ]
 
 
