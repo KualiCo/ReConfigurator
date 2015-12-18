@@ -82,12 +82,24 @@ addDropzoneAttrs address dragging id currentAttrs side =
         ]
 
 
+addDraggableAttrs : Address Action -> TemplateElement -> List Attribute -> List Attribute
+addDraggableAttrs address elem existingAttrs =
+    List.append
+        existingAttrs
+        [ draggable "true"
+        , on "drag" Json.value (\_ -> message address (SetDragging elem))
+        , on "dragend" Json.value (\_ -> message address (SetDragging noDrag))
+        ]
+
+
 render : Address Action -> Template -> HoverInfo -> Drag -> Html
 render address tpl hovering dragging =
     let
         elements = tpl.elements
 
         addVertDropzones' = addVertDropzones address dragging hovering
+
+        addDraggableAttrs' = addDraggableAttrs address
 
         renderId id =
             Maybe.withDefault
@@ -99,14 +111,6 @@ render address tpl hovering dragging =
                 currentClasses ++ " hovering"
             else
                 currentClasses
-
-        addDraggableAttrs elem existingAttrs =
-            List.append
-                existingAttrs
-                [ draggable "true"
-                , on "drag" Json.value (\_ -> message address (SetDragging elem))
-                , on "dragend" Json.value (\_ -> message address (SetDragging noDrag))
-                ]
 
         renderElement elem =
             if elem.type' == "Row" then
@@ -121,7 +125,7 @@ render address tpl hovering dragging =
                 addVertDropzones'
                     elem.id
                     <| div
-                        (addDraggableAttrs
+                        (addDraggableAttrs'
                             elem
                             [ class "panel"
                             , key elem.id
